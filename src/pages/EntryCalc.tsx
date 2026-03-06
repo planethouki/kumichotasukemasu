@@ -41,7 +41,7 @@ const theme = createTheme({
 });
 
 
-function Hone() {
+function EntryCalc() {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -180,4 +180,4 @@ function Hone() {
   );
 }
 
-export default Hone
+export default EntryCalc
