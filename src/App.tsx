@@ -106,11 +106,13 @@ function App() {
       songNames.forEach((song, songIdx) => {
         if (!song || song.trim() === '') return; // 曲名が空の場合はスキップ
 
+        const cleanedSong = song.trim().replace(/^\[/, '').replace(/\]$/, '').trim();
+
         const rowData = [
           (songIdx + 1).toString(), // 番号
           '', // (空)
           '', // 選曲者
-          song, // タイトル/アーティスト
+          cleanedSong, // タイトル/アーティスト
         ];
 
         // 各楽器の担当者を探す
