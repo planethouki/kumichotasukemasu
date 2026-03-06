@@ -14,8 +14,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import * as XLSX from 'xlsx'
-import './App.css'
-import { processExcelFile } from './utils/excelProcessor'
+import { processExcelFile } from '../utils/excelProcessor.ts'
 
 // 手書きのイラストレーターに優しい、暖かみのあるテーマ設定
 const theme = createTheme({
@@ -42,7 +41,7 @@ const theme = createTheme({
 });
 
 
-function App() {
+function Hone() {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -182,4 +181,4 @@ function App() {
   );
 }
 
-export default App
+export default Hone
