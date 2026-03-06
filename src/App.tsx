@@ -40,6 +40,8 @@ const theme = createTheme({
   },
 });
 
+const normalizePart = (part: string) => part.trim().replace(/\.+$/, '');
+
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -112,15 +114,21 @@ function App() {
         // 各楽器の担当者を探す
         instruments.forEach(inst => {
           const participants: string[] = [];
+          const normalizedInst = normalizePart(inst);
+
           memberResponses.forEach(m => {
             const resp = m.responses[songIdx] || '';
             // パート指定が "Cho., Gt1" のように複数ある場合も考慮
-            const parts = resp.toString().split(/[,，、\n]/).map(p => p.trim());
-            if (parts.includes(inst)) {
+            const parts = resp
+              .toString()
+              .split(/[,，、\n]/)
+              .map(p => normalizePart(p));
+
+            if (parts.includes(normalizedInst)) {
               participants.push(m.name);
             }
           });
-          rowData.push(participants.join(' / '));
+          rowData.push(participants.join('・'));
         });
 
         outputData.push(rowData);
