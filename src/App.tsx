@@ -54,6 +54,8 @@ function App() {
       setIsDone(false);
       setResultWorkbook(null);
     }
+    // 同じファイルを再度選択してもonChangeが発火するように、inputのvalueをリセット
+    e.target.value = '';
   };
 
   const handleProcess = () => {
@@ -153,7 +155,7 @@ function App() {
     if (!resultWorkbook) return;
     
     // エクセルファイルとして書き出し
-    XLSX.writeFile(resultWorkbook, 'output.xlsx');
+    XLSX.writeFile(resultWorkbook, 'エントリー集計結果.xlsx');
   };
 
   return (
