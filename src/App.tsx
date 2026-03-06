@@ -64,9 +64,9 @@ function App() {
     setIsProcessing(true);
     
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const data = new Uint8Array(e.target?.result as ArrayBuffer);
-      const newWorkbook = processExcelFile(data);
+      const newWorkbook = await processExcelFile(data);
       
       if (!newWorkbook) {
         setIsProcessing(false);

@@ -1,9 +1,31 @@
 import * as XLSX from 'xlsx';
 
-const normalizePart = (part: string) => part.trim().replace(/\.+$/, '');
+const normalizePart = (part: string) => {
+  const normalized = part.trim().replace(/\.+$/, '');
+  // GtはGt1とする
+  if (normalized === 'Gt') return 'Gt1';
+  return normalized;
+};
 
-export const processExcelFile = (data: Uint8Array): XLSX.WorkBook | null => {
+interface SongData {
+  song: string;
+  name: string;
+  part: string;
+}
+
+export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook | null> => {
   const workbook = XLSX.read(data, { type: 'array' });
+
+  // JSONデータの取得
+  let songDataList: SongData[] = [];
+  try {
+    const songSelector = import.meta.env.VITE_SONG_SELECTOR;
+    if (songSelector) {
+      songDataList = JSON.parse(songSelector) as SongData[];
+    }
+  } catch (error) {
+    console.error('Failed to parse song selector data:', error);
+  }
   
   // 最初のシートを取得
   const firstSheetName = workbook.SheetNames[0];
@@ -44,10 +66,15 @@ export const processExcelFile = (data: Uint8Array): XLSX.WorkBook | null => {
 
     const cleanedSong = song.trim().replace(/^\[/, '').replace(/\]$/, '').trim();
 
+    // 選曲者情報の検索
+    const songInfo = songDataList.find(s => s.song.trim() === cleanedSong);
+    const selectionPerson = songInfo ? songInfo.name : '';
+    const selectionPersonPart = songInfo ? songInfo.part : '';
+
     const rowData = [
       (songIdx + 1).toString(), // 番号
       '', // (空)
-      '', // 選曲者
+      selectionPerson, // 選曲者
       cleanedSong, // タイトル/アーティスト
     ];
 
@@ -55,6 +82,17 @@ export const processExcelFile = (data: Uint8Array): XLSX.WorkBook | null => {
     instruments.forEach(inst => {
       const participants: string[] = [];
       const normalizedInst = normalizePart(inst);
+
+      // 選曲者がこのパートの担当者の場合は追加
+      if (selectionPerson && selectionPersonPart) {
+        const parts = selectionPersonPart
+          .toString()
+          .split(/[,，、\n]/)
+          .map(p => normalizePart(p));
+        if (parts.includes(normalizedInst)) {
+          participants.push(selectionPerson);
+        }
+      }
 
       memberResponses.forEach(m => {
         const resp = m.responses[songIdx] || '';
@@ -65,7 +103,10 @@ export const processExcelFile = (data: Uint8Array): XLSX.WorkBook | null => {
           .map(p => normalizePart(p));
 
         if (parts.includes(normalizedInst)) {
-          participants.push(m.name);
+          // 重複チェック
+          if (!participants.includes(m.name)) {
+            participants.push(m.name);
+          }
         }
       });
       rowData.push(participants.join('・'));
