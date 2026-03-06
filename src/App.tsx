@@ -13,6 +13,7 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import * as XLSX from 'xlsx'
 import './App.css'
 
 // 手書きのイラストレーターに優しい、暖かみのあるテーマ設定
@@ -43,11 +44,13 @@ function App() {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [resultWorkbook, setResultWorkbook] = useState<XLSX.WorkBook | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
       setIsDone(false);
+      setResultWorkbook(null);
     }
   };
 
@@ -55,16 +58,94 @@ function App() {
     if (!file) return;
     
     setIsProcessing(true);
-    // 整形処理のシミュレーション（後で実装）
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsDone(true);
-    }, 2000);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: 'array' });
+      
+      // 最初のシートを取得
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // シートを2次元配列として取得 (空セルも保持するため)
+      const rows = XLSX.utils.sheet_to_json<string[]>(worksheet, { header: 1, defval: '' });
+      
+      if (rows.length < 2) {
+        setIsProcessing(false);
+        return;
+      }
+
+      const headers = rows[0];
+      // 3列目以降が曲名
+      const songNames = headers.slice(2);
+      
+      const memberResponses = rows.slice(1).map(row => {
+        const name = row[1] || '';
+        const responses = row.slice(2);
+        return { name, responses };
+      }).filter(m => m.name.trim() !== ''); // 名前が空の行は除外
+
+      // 楽器リスト
+      const instruments = ['Vo.', 'Cho.', 'Gt1.', 'Gt2.', 'Ba.', 'Dr.', 'Key.'];
+      
+      // 出力用データの配列
+      const outputData: any[][] = [
+        ['4:30 OPEN'],
+        ['5:00 受付'],
+        ['5:30 1曲目音出し'],
+        ['5:50 朝礼'],
+        [],
+        ['', '', '選曲者', 'タイトル/アーティスト', ...instruments]
+      ];
+
+      songNames.forEach((song, songIdx) => {
+        if (!song || song.trim() === '') return; // 曲名が空の場合はスキップ
+
+        const rowData = [
+          (songIdx + 1).toString(), // 番号
+          '', // (空)
+          '', // 選曲者 (input.csvにはなさそうなので空)
+          song, // タイトル/アーティスト
+        ];
+
+        // 各楽器の担当者を探す
+        instruments.forEach(inst => {
+          const participants: string[] = [];
+          memberResponses.forEach(m => {
+            const resp = m.responses[songIdx] || '';
+            // パート指定が "Cho., Gt1" のように複数ある場合も考慮
+            const parts = resp.toString().split(/[,，、\n]/).map(p => p.trim());
+            if (parts.includes(inst)) {
+              participants.push(m.name);
+            }
+          });
+          rowData.push(participants.join(' / '));
+        });
+
+        outputData.push(rowData);
+      });
+
+      // 新しいワークブックとシートの作成
+      const newWorksheet = XLSX.utils.aoa_to_sheet(outputData);
+      const newWorkbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '集計結果');
+
+      setResultWorkbook(newWorkbook);
+      
+      setTimeout(() => {
+        setIsProcessing(false);
+        setIsDone(true);
+      }, 1500);
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   const handleDownload = () => {
-    // ダウンロード処理のシミュレーション
-    alert('整えられたエクセルファイルをダウンロードします！');
+    if (!resultWorkbook) return;
+    
+    // エクセルファイルとして書き出し
+    XLSX.writeFile(resultWorkbook, 'output.xlsx');
   };
 
   return (
