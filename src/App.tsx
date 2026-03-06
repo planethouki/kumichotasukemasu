@@ -109,7 +109,7 @@ function App() {
         const rowData = [
           (songIdx + 1).toString(), // 番号
           '', // (空)
-          '', // 選曲者 (input.csvにはなさそうなので空)
+          '', // 選曲者
           song, // タイトル/アーティスト
         ];
 
