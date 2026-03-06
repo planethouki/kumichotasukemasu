@@ -117,6 +117,16 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
 
   // 新しいワークブックとシートの作成
   const newWorksheet = XLSX.utils.aoa_to_sheet(outputData);
+
+  // 列の幅を設定
+  newWorksheet['!cols'] = [
+    { wch: 5 },  // 番号
+    { wch: 2 },  // (空)
+    { wch: 15 }, // 選曲者
+    { wch: 40 }, // タイトル/アーティスト
+    ...instruments.map(() => ({ wch: 15 })) // 各楽器
+  ];
+
   const newWorkbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '集計結果');
 
