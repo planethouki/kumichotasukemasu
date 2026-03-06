@@ -132,6 +132,11 @@ function EntryCalc() {
                 {file ? file.name : 'エクセルを選ぶ'}
               </Button>
             </label>
+            {!file && (
+              <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>
+                4月エントリー（回答）.xlsxを選択してね
+              </Typography>
+            )}
           </Box>
 
           {file && !isProcessing && !isDone && (
