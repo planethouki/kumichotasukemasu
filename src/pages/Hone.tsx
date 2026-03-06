@@ -95,11 +95,10 @@ function Hone() {
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center', backgroundColor: '#ffffff' }}>
           <Typography variant="h4" gutterBottom color="primary">
-            エクセルお助け隊
+            エントリー集計
           </Typography>
           <Typography variant="body1" sx={{ mb: 4, color: '#666' }}>
-            エクセルファイルをアップロードすると、<br />
-            自動で使いやすく整えます。
+            今のところ4月セッションのみ対応
           </Typography>
 
           <Box sx={{ mb: 4 }}>
