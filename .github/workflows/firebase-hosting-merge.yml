@@ -12,10 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create .env file
+        shell: bash
         run: |
-          echo "${{ secrets.ENV }}" > .env
-      - name: Count .env lines and characters
-        run: wc -l -c .env
+          cat << 'EOF' > .env
+          ${{ secrets.ENV }}
+          EOF
+      - name: Verify .env exists
+        run: |
+          if [ -s .env ]; then
+            echo ".env created successfully"
+            wc -l -c .env
+          else
+            echo ".env is empty or not created"
+            exit 1
+          fi
       - run: npm ci && npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
