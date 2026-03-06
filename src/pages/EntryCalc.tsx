@@ -10,6 +10,8 @@ import {
   createTheme, 
   CssBaseline 
 } from '@mui/material'
+import { Link } from 'react-router'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -93,6 +95,16 @@ function EntryCalc() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Box sx={{ mb: 4 }}>
+          <Button
+            component={Link}
+            to="/"
+            startIcon={<ArrowBackIcon />}
+            sx={{ color: 'text.secondary' }}
+          >
+            戻る
+          </Button>
+        </Box>
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center', backgroundColor: '#ffffff' }}>
           <Typography variant="h4" gutterBottom color="primary">
             エントリー集計
