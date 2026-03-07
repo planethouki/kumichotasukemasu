@@ -98,26 +98,37 @@ function Home() {
             </Paper>
           </Grid>
 
-          {/* 今後追加される予定のダミーカード */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Paper 
-              elevation={1} 
+              elevation={2} 
               sx={{ 
                 p: 4, 
                 height: '100%', 
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center',
-                opacity: 0.6,
-                backgroundColor: '#f5f5f5'
+                transition: 'transform 0.2s',
+                '&:hover': { transform: 'scale(1.02)' }
               }}
             >
-              <Typography variant="h5" gutterBottom color="text.disabled">
-                準備中...
+              <CalculateIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h5" gutterBottom>
+                出欠集計
               </Typography>
-              <Typography variant="body1" sx={{ mb: 4, textAlign: 'center', color: 'text.disabled' }}>
-                他にも役立つ機能を準備しています。お楽しみに。
+              <Typography variant="body1" sx={{ mb: 4, textAlign: 'center', color: '#666' }}>
+                出欠回答のエクセルを読み込んで、見やすくまとめます。
               </Typography>
+              <Button
+                component={Link}
+                to="/attendance/calc"
+                variant="contained"
+                color="primary"
+                size="large"
+                fullWidth
+                sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}
+              >
+                ここから始める
+              </Button>
             </Paper>
           </Grid>
         </Grid>
