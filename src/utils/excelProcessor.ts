@@ -2,17 +2,26 @@ import * as XLSX from 'xlsx';
 
 const normalizePart = (part: string) => {
   const normalized = part.trim().replace(/\.+$/, '');
-  // GtはGt1とする
   if (normalized === 'Gt') return 'Gt1';
+  if (normalized === 'Gt.2') return 'Gt2';
   return normalized;
+};
+
+const normalizePartsList = (partsStr: string) => {
+  return partsStr
+      .split(/[,，、\n]/)
+      .map(p => normalizePart(p));
 };
 
 interface SongData {
   song: string;
   name: string;
-  myPart: string;
-  allPart: string;
+  myParts: string;
+  allParts: string;
 }
+
+// 楽器リスト
+const INSTRUMENTS = ['Vo.', 'Cho.', 'Gt1.', 'Gt2.', 'Ba.', 'Dr.', 'Key.'];
 
 export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook | null> => {
   const workbook = XLSX.read(data, { type: 'array' });
@@ -48,9 +57,6 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
     const responses = row.slice(2);
     return { name, responses };
   }).filter(m => m.name.trim() !== ''); // 名前が空の行は除外
-
-  // 楽器リスト
-  const instruments = ['Vo.', 'Cho.', 'Gt1.', 'Gt2.', 'Ba.', 'Dr.', 'Key.'];
   
   // 出力用データの配列
   const outputData: string[][] = [
@@ -59,7 +65,7 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
     ['5:30 1曲目音出し'],
     ['5:50 朝礼'],
     [],
-    ['', '', '選曲者', 'タイトル/アーティスト', ...instruments]
+    ['', '', '選曲者', 'タイトル/アーティスト', ...INSTRUMENTS]
   ];
 
   songNames.forEach((song, songIdx) => {
@@ -70,7 +76,8 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
     // 選曲者情報の検索
     const songInfo = songDataList.find(s => s.song.trim() === cleanedSong);
     const selectionPerson = songInfo ? songInfo.name : '';
-    const selectionPersonPart = songInfo ? songInfo.myPart : '';
+    const selectionPersonPart = songInfo ? songInfo.myParts : '';
+    const requiredParts = songInfo ? normalizePartsList(songInfo.allParts) : [];
 
     const rowData = [
       (songIdx + 1).toString(), // 番号
@@ -80,16 +87,20 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
     ];
 
     // 各楽器の担当者を探す
-    instruments.forEach(inst => {
-      const participants: string[] = [];
+    INSTRUMENTS.forEach(inst => {
       const normalizedInst = normalizePart(inst);
+
+      // その曲にそのパートが必要ない場合は全角ハイフン
+      if (songInfo && !requiredParts.includes(normalizedInst)) {
+        rowData.push('－');
+        return;
+      }
+
+      const participants: string[] = [];
 
       // 選曲者がこのパートの担当者の場合は追加
       if (selectionPerson && selectionPersonPart) {
-        const parts = selectionPersonPart
-          .toString()
-          .split(/[,，、\n]/)
-          .map(p => normalizePart(p));
+        const parts = normalizePartsList(selectionPersonPart.toString());
         if (parts.includes(normalizedInst)) {
           participants.push(selectionPerson);
         }
@@ -98,10 +109,7 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
       memberResponses.forEach(m => {
         const resp = m.responses[songIdx] || '';
         // パート指定が "Cho., Gt1" のように複数ある場合も考慮
-        const parts = resp
-          .toString()
-          .split(/[,，、\n]/)
-          .map(p => normalizePart(p));
+        const parts = normalizePartsList(resp.toString());
 
         if (parts.includes(normalizedInst)) {
           // 重複チェック
@@ -125,7 +133,7 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
     { wch: 2 },  // (空)
     { wch: 15 }, // 選曲者
     { wch: 40 }, // タイトル/アーティスト
-    ...instruments.map(() => ({ wch: 15 })) // 各楽器
+    ...INSTRUMENTS.map(() => ({ wch: 15 })) // 各楽器
   ];
 
   const newWorkbook = XLSX.utils.book_new();
