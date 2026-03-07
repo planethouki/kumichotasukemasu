@@ -204,7 +204,7 @@ function AttendanceCalc() {
         </Box>
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center', backgroundColor: '#ffffff' }}>
           <Typography variant="h4" gutterBottom color="primary">
-            出欠集計
+            出欠集計（β）
           </Typography>
           <Typography variant="body1" sx={{ mb: 4, color: '#666' }}>
             回答エクセルを読み込んで、出欠を分かりやすくまとめます
@@ -231,7 +231,7 @@ function AttendanceCalc() {
             </label>
             {!file && (
               <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>
-                出欠回答のエクセルを選択してね
+                4月りんごなかま選曲・出欠 （回答）.xlsxを選択してね
               </Typography>
             )}
           </Box>
