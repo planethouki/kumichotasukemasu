@@ -150,6 +150,20 @@ function AttendanceCalc() {
         });
 
         const newWorksheet = XLSX.utils.aoa_to_sheet(outputData);
+
+        // 列の幅を設定
+        newWorksheet['!cols'] = [
+          { wch: 10 }, // A: 名札
+          { wch: 10 }, // B: エントリー
+          { wch: 10 }, // C: セッション出欠
+          { wch: 5 },  // D: 空白
+          { wch: 25 }, // E: お名前（りんごネーム）
+          { wch: 10 }, // F: 打ち上げ出欠
+          { wch: 15 }, // G: 空白
+          { wch: 20 }, // H: 最後に参加した月
+          { wch: 30 }, // I: 備考
+        ];
+
         const newWorkbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '出欠集計');
         
