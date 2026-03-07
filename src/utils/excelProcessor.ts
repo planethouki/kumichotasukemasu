@@ -52,7 +52,7 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
   const instruments = ['Vo.', 'Cho.', 'Gt1.', 'Gt2.', 'Ba.', 'Dr.', 'Key.'];
   
   // 出力用データの配列
-  const outputData: any[][] = [
+  const outputData: string[][] = [
     ['4:30 OPEN'],
     ['5:00 受付'],
     ['5:30 1曲目音出し'],
