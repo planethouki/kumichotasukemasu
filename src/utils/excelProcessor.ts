@@ -10,7 +10,8 @@ const normalizePart = (part: string) => {
 interface SongData {
   song: string;
   name: string;
-  part: string;
+  myPart: string;
+  allPart: string;
 }
 
 export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook | null> => {
@@ -69,7 +70,7 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
     // 選曲者情報の検索
     const songInfo = songDataList.find(s => s.song.trim() === cleanedSong);
     const selectionPerson = songInfo ? songInfo.name : '';
-    const selectionPersonPart = songInfo ? songInfo.part : '';
+    const selectionPersonPart = songInfo ? songInfo.myPart : '';
 
     const rowData = [
       (songIdx + 1).toString(), // 番号
