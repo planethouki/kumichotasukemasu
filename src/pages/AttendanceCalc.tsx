@@ -46,27 +46,123 @@ function AttendanceCalc() {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
-  const [resultWorkbook, _setResultWorkbook] = useState<XLSX.WorkBook | null>(null);
+  const [resultWorkbook, setResultWorkbook] = useState<XLSX.WorkBook | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
       setIsDone(false);
-      // setResultWorkbook(null);
+      setResultWorkbook(null);
     }
     e.target.value = '';
   };
 
-  const handleProcess = () => {
+  interface AttendanceData {
+    name: string;
+    session: string;
+    party: string;
+    isSessionAttend: boolean;
+  }
+
+  const handleProcess = async () => {
     if (!file) return;
     
     setIsProcessing(true);
     
-    // 集計機能はまだ作らないため、タイマーで完了をシミュレート
-    setTimeout(() => {
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // 1行目がタイトル
+        const rows = XLSX.utils.sheet_to_json<Record<string, string>>(worksheet);
+        
+        // 必要なデータを抽出
+        // 「お名前（りんごネーム）」「セッション出欠」「打ち上げ出欠」
+        const attendees: AttendanceData[] = [];
+        const absentees: AttendanceData[] = [];
+        
+        rows.forEach((row) => {
+          const name = row['お名前（りんごネーム）'];
+          const sessionAttendance = row['セッション出欠'];
+          const partyAttendance = row['打ち上げ出欠'];
+          
+          if (!name) return;
+
+          const data = {
+            name,
+            session: sessionAttendance === '出席' ? '〇' : '×',
+            party: partyAttendance === '出席' ? '〇' : '×',
+            isSessionAttend: sessionAttendance === '出席'
+          };
+
+          if (data.isSessionAttend) {
+            attendees.push(data);
+          } else {
+            absentees.push(data);
+          }
+        });
+
+        // 出力用データの作成
+        const outputData: string[][] = [];
+        
+        // 1行目はメモ欄で空白
+        outputData.push([]);
+        
+        // 2行目がヘッダー
+        // Ａ列は「名札」、Ｂ列は「エントリー」、Ｃ列は「セッション出欠」、Ｄ列は空白、Ｅ列は空白、Ｆ列が「打上」、Ｈ列が「最後に参加した月」、Ｉ列が「備考」
+        // (G列は空白だが、ヘッダーの説明にはない。3行目以降はGも空白とのこと)
+        outputData.push(['名札', 'エントリー', 'セッション出欠', '', '', '打ち上げ出欠', '', '最後に参加した月', '備考']);
+        
+        // 3行目以降がデータ
+        // Ａ、Ｂ、Ｄ、Ｇ、Ｈ、Ｉは空白
+        // Ｃはセッション出欠で出席なら「〇」欠席なら「×」
+        // Ｅは「お名前（りんごネーム）」
+        // Ｆは「打ち上げ出欠」で出席なら「〇」欠席なら「×」
+        attendees.forEach(a => {
+          outputData.push(['', '', a.session, '', a.name, a.party, '', '', '']);
+        });
+
+        // 集計行
+        const sessionAttendCount = attendees.length;
+        const partyAttendCount = attendees.filter(a => a.party === '〇').length;
+        
+        const sessionFee = 1000;
+        const partyFee = 4000;
+        
+        const sessionTotalAmount = sessionAttendCount * sessionFee;
+        const partyTotalAmount = partyAttendCount * partyFee;
+
+        outputData.push([]);
+        // 「会場費25000円 xx名分xxxx円」
+        outputData.push(['', '', '', '', `会場費25000円 ${sessionAttendCount}名分${sessionTotalAmount}円`]);
+        // 「打ち上げxx名分xxxxx円」
+        outputData.push(['', '', '', '', `打ち上げ${partyAttendCount}名分${partyTotalAmount}円`]);
+        outputData.push([]);
+
+        // 下部にセッション欠席の表。ヘッダー不要。
+        absentees.forEach(a => {
+          outputData.push(['', '', a.session, '', a.name, a.party, '', '', '']);
+        });
+
+        const newWorksheet = XLSX.utils.aoa_to_sheet(outputData);
+        const newWorkbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '出欠集計');
+        
+        setResultWorkbook(newWorkbook);
+        setIsProcessing(false);
+        setIsDone(true);
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      alert('ファイルの処理中にエラーが発生しました');
       setIsProcessing(false);
-      setIsDone(true);
-    }, 1500);
+    }
   };
 
   const handleDownload = () => {
@@ -75,7 +171,7 @@ function AttendanceCalc() {
         return;
     }
     
-    XLSX.writeFile(resultWorkbook, '出欠集計結果.xlsx');
+    XLSX.writeFile(resultWorkbook, 'りんご受付.xlsx');
   };
 
   return (
