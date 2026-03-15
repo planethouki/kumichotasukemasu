@@ -60,10 +60,10 @@ export const processExcelFile = async (data: Uint8Array): Promise<XLSX.WorkBook 
   
   // 出力用データの配列
   const outputData: string[][] = [
-    ['4:30 OPEN'],
-    ['5:00 受付'],
-    ['5:30 1曲目音出し'],
-    ['5:50 朝礼'],
+    [],
+    [],
+    [],
+    [],
     [],
     ['', '', '選曲者', 'タイトル/アーティスト', ...INSTRUMENTS]
   ];
